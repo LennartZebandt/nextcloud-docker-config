@@ -1,0 +1,5 @@
+env_files/*
+!env_files/*.example.env
+.env
+traefik/acme.json
+traefik/traefik.toml

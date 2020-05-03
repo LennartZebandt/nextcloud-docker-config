@@ -1,0 +1,115 @@
+version: "3.5"
+
+volumes:
+  nextcloud:
+  postgres:
+
+networks:
+  nextcloud-network:
+    name: nextcloud-network
+
+# Reusable shared config
+x-nc-shared: &nc-shared
+  networks:
+    - nextcloud-network
+  # After 10 restarts dont try it again, otherwise it could affect other services on the host machine by restarting infinitely
+  restart: on-failure:10
+  # Limit the logging files to 10 with 100mb each, otherwise there is no limit until the disk is full
+  logging:
+    driver: "json-file"
+    options:
+      max-size: "100mb"
+      max-file: "10"
+
+services:
+  # Database used for OnlyOffice Document Server and Nextcloud itself
+  postgres:
+    build:
+      context: ./postgres
+    container_name: postgres
+    volumes:
+      - postgres:/var/lib/postgresql/data
+      - /etc/localtime:/etc/localtime:ro
+    env_file:
+      - ./env_files/postgres.env
+    # Dont make it reachable outside of docker for security reasons
+    labels:
+      - traefik.enable=false
+    <<: *nc-shared
+
+  # Redis for caching with Nextcloud (This is optional)
+  nc-redis:
+    image: redis:5.0.8-alpine
+    container_name: nc-redis
+    # Dont make it reachable outside of docker for security reasons
+    labels:
+      - traefik.enable=false
+    <<: *nc-shared
+
+  # Redis for session/lock storage for OnlyOffice Documentserver
+  ds-redis:
+    image: redis:5.0.8-alpine
+    container_name: ds-redis
+    # Dont make it reachable outside of docker for security reasons
+    labels:
+      - traefik.enable=false
+    <<: *nc-shared
+
+  # Message Broker used by OnlyOffice Document Server
+  rabbitmq:
+    image: rabbitmq:3.8.3-alpine
+    container_name: rabbitmq
+    # Dont make it reachable outside of docker for security reasons
+    labels:
+      - traefik.enable=false
+    <<: *nc-shared
+
+  # Document Server for Nextcloud OnlyOffice Connector
+  documentserver:
+    image: onlyoffice/documentserver:5.5.1.76
+    container_name: documentserver
+    depends_on:
+      - postgres
+      - ds-redis
+      - rabbitmq
+    env_file: 
+      - ./env_files/documentserver.env
+    labels:
+      - traefik.docker.network=nextcloud-network
+      - traefik.frontend.rule=Host:${DOCUMENT_SERVER_DOMAIN}
+      - traefik.port=80
+    <<: *nc-shared
+
+  nextcloud-app:
+    image: nextcloud:18.0.4-apache
+    container_name: nextcloud-app
+    depends_on:
+      - postgres
+      - nc-redis
+    volumes:
+      - nextcloud:/var/www/html
+      - /etc/localtime:/etc/localtime:ro
+    env_file:
+      - ./env_files/postgres.env
+      - ./env_files/nextcloud.env
+    labels:
+      - traefik.docker.network=nextcloud-network
+      - traefik.frontend.rule=Host:${NEXTCLOUD_DOMAIN}
+      - traefik.port=80
+    <<: *nc-shared
+
+  # Traefik for routing
+  router:
+    image: traefik:1.7.24-alpine
+    container_name: router
+    command: --api --docker
+    ports:
+      - 80:80
+      - 443:443
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - ./traefik/traefik.toml:/traefik.toml
+      - ./traefik/acme.json:/acme.json
+    labels:
+      - traefik.enable=false
+    <<: *nc-shared
