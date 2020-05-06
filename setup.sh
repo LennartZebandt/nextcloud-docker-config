@@ -34,5 +34,5 @@ sed -i "s/%MAIL/${letsEncryptMail}/g" ./traefik/traefik.toml
 
 if [ ! -f ./traefik/acme.json ]; then
     touch ./traefik/acme.json
-    chmod 600 ./traefik/acme.json 
+    chmod 600 ./traefik/acme.json
 fi

@@ -72,7 +72,7 @@ services:
       - postgres
       - ds-redis
       - rabbitmq
-    env_file: 
+    env_file:
       - ./env_files/documentserver.env
     labels:
       - traefik.docker.network=nextcloud-network
