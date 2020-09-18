@@ -1,5 +1,7 @@
 # nextcloud-docker-config
 
+> Actual development and issue managment happens on [Gitlab](https://gitlab.com/lennartZebandt/nextcloud-docker-config)
+
 This is my nextcloud configuration combining the use of Docker Compose, Traefik, Let's Encrypt, Redis, Postgres, RabbitMQ and the OnlyOffice Documentserver. The purpose the the containers are documented in the docker-compose.yml.
 Additionally credentials are passed to the containers via .env files, these files should not be checked into version control.
 To make handling of the env files easier i created example files that are checked into version control and a bash script that generates them.
