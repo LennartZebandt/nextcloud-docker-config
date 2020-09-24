@@ -46,40 +46,6 @@ services:
       - traefik.enable=false
     <<: *nc-shared
 
-  # Redis for session/lock storage for OnlyOffice Documentserver
-  ds-redis:
-    image: redis:5.0.8-alpine
-    container_name: ds-redis
-    # Dont make it reachable outside of docker for security reasons
-    labels:
-      - traefik.enable=false
-    <<: *nc-shared
-
-  # Message Broker used by OnlyOffice Document Server
-  rabbitmq:
-    image: rabbitmq:3.8.8-alpine
-    container_name: rabbitmq
-    # Dont make it reachable outside of docker for security reasons
-    labels:
-      - traefik.enable=false
-    <<: *nc-shared
-
-  # Document Server for Nextcloud OnlyOffice Connector
-  documentserver:
-    image: onlyoffice/documentserver:5.6.4.20
-    container_name: documentserver
-    depends_on:
-      - postgres
-      - ds-redis
-      - rabbitmq
-    env_file:
-      - ./env_files/documentserver.env
-    labels:
-      - traefik.docker.network=nextcloud-network
-      - traefik.frontend.rule=Host:${DOCUMENT_SERVER_DOMAIN}
-      - traefik.port=80
-    <<: *nc-shared
-
   nextcloud-app:
     image: nextcloud:19.0.3-apache
     container_name: nextcloud-app
