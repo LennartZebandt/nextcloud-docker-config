@@ -15,15 +15,15 @@ If you keep your repository private you can check the traefik.toml into version 
 But if you host a private nextcloud instance, you propably dont want the URL or your Email in a public repo.
 
 ```console
-./setup.sh
+./scripts/setup.sh
 ```
 
 After that the script will ask you for your credentials and other configs that needed to be present in the env files.
 
-### Build and start Nextcloud
+### Start
 
-This starts the containers in detached mode.
+This script starts the docker containers in detached mode.
 
 ```console
-docker-compose up --build -d
+./scripts/start.sh
 ```
