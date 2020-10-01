@@ -1,9 +1,9 @@
 #!/bin/bash
 
 function createYesNoPrompt {
-    local question="${1} [Y/n]"
+    local question="${1} [Y/n] "
     while true; do
-        read -p "$question" answer
+        read -r -p "$question" answer
         case "$answer" in
             [Yy]* ) return 0;;
             [Nn]* ) return 1;;
